@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Task 1: Import Data and Initial Exploration 1. Import that data into R (using read.table() or read.csv() functions). 2. Print the first 10 rows of the data set (using head() function). 3. Show a summary of all variables using summary() function. 4. Calculate the mean value of medv variable. 5. Plot a histogram of medv variable. Mark the mean value of medv on the plot by adding a vertical line.
+
+```{r}
+# 1.1 import data
+df = read.csv("BostonHousing.csv")
+class(df)
+```
+
+```{r}
+# 1.2 print first 10 rows
+head(df, 10)
+```
+
+```{r}
+# 1.3 summary() function
+summary(df)
+```
+
+```{r}
+# 1.4 calculate mean of medv
+mean(df$medv)
+```
+
+```{r}
+# 1.5 plot histogram of medv
+mean_medv = mean(df$medv)
+hist(df$medv)
+abline(v = mean_medv, col = "blue", lwd = 2)
+```
+
+Task 2: Create a Variable 6. Create a variable called cat.medv and add to the data frame. It is a categorical variable whose value equals 1 if the medv value for a tract is greater than \$30,000 and equals 0 otherwise. 7. Calculate the mean of cat.medv. Explain what this mean value means.
+
+```{r}
+# 2.6 create new variable cat.medv
+df$cat.medv = ifelse(df$medv > 30, 1, 0)
+```
+
+```{r}
+# 2.7 mean of cat.medv
+mean(df$cat.medv)
+```
+
+Task 3: Bar Chart Bar charts are useful tools for comparing certain statistics across different groups (or categories). Let’s create a bar chart to compare the average value of cat.medv for the tracts that bound Charles River and that for those tracts that don’t bound the river. Follow the following steps. 8. Calculate the mean of cat.medv for the tracts that bound Charles River (i.e., chas==1), and save it to a variable. 9. Calculate the mean of cat.medv for the tracts that don’t bound Charles River (i.e., chas==0), and save it to a variable. 10. Create a vector that comprises the two calculated mean values. 11. Plot a bar chart using the above created vector as the data. Label the two bars properly (Hint: using the names.arg argument). 12. Discuss what you can tell from the bar chart.
+
+```{r}
+# 3.8 mean of cat.medv where chas==1
+mean_cat.medv_chas1 = mean(df$cat.medv[df$chas==1])
+mean_cat.medv_chas1
+```
+
+```{r}
+# 3.9 mean of cat.medv where chas==0
+mean_cat.medv_chas0 = mean(df$cat.medv[df$chas==0])
+mean_cat.medv_chas0
+```
+
+```{r}
+# 3.10 create vector
+avg0_avg1 = c(mean_cat.medv_chas0, mean_cat.medv_chas1)
+avg0_avg1
+```
+
+```{r}
+# 3.11 create bar chart
+barplot(avg0_avg1, xlab = "by charles river", ylab = "% tracts w/ medv > 30k", names.arg = avg0_avg1)
+```
+
+Task 4: Boxplot Boxplots show the distribution of a numerical variable. Side-by-side boxplots allow us to compare such distributions across different groups.
+
+13\. Create a side-by-side boxplot of medv over chas, that is, show the distributions of medv for the two groups with chas==1 and chas==0. (Hint: use the \~ operator.) Discuss what you can conclude from the boxplot.
+
+```{r}
+# 4.13 create a boxplot
+boxplot(df$medv~df$chas)
+```
+
+Task 5: Scatter Plot and Fitting a Regression Line Scatter plots are the most commonly used visualization tool to show the relationship among two numerical variables. 14. Create a scatter plot of medv (y-axis) versus lstat (x-axis). 15. Run a simple linear regression of medv on lstat. Show the regression results. 16. Add the regression line onto the scatter plot. Add a legend appropriately.
+
+```{r}
+#
+plot(df$lstat, df$medv, xlab="lstat", ylab="medv")
+```
+
+```{r}
+lm(medv~lstat, data=df)
+```

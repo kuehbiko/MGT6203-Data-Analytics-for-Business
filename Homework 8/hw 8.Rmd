@@ -1,0 +1,116 @@
+```{r}
+library(neuralnet)
+```
+
+```{r}
+mydata = read.csv("Smarket.csv")
+str(mydata)
+```
+
+```{r}
+mydata1 = mydata[, -c(1, 8)]
+str(mydata1)
+```
+
+```{r}
+mydata1[,-7] = scale(mydata1[,-7])
+str(mydata1)
+```
+
+```{r}
+n.train = floor(nrow(mydata1)*0.8)
+set.seed(1000)
+ind.train = sample(1:nrow(mydata1), n.train)
+data.train = mydata1[ind.train,]
+data.test = mydata1[-ind.train,]
+```
+
+```{r}
+nn = neuralnet(Up~Lag1+Lag2, data=data.train, hidden=2, linear.output=FALSE) 
+load("Smarket_nn1.Rda")
+```
+
+```{r}
+plot(nn, rep="best")
+```
+
+```{r}
+nn$weights
+```
+
+```{r}
+data.test[1,]
+```
+
+```{r}
+s1 = (-1.5526810) + ((-0.4006151) * (-0.5516457)) + (0.3979986 * 0.9047775)
+s1 = exp(s1) / (1+exp(s1))
+s1
+```
+
+```{r}
+s2 = (-20.092955) + (1.325688 * (-0.5516457)) + (33.606746 * 0.9047775)
+s2 = exp(s2) / (1+exp(s2))
+s2
+```
+
+```{r}
+p1 = (-0.2670554) + (2.5133068 * s1) + (-0.7918837 * s2)
+p1 = exp(p1) / (1+exp(p1))
+p1
+```
+
+```{r}
+compute(nn, data.test[1,])
+```
+
+```{r}
+nn = neuralnet(Up~., data=data.train, hidden=c(4,2), linear.output=FALSE)
+```
+
+```{r}
+load("Smarket_nn2.Rda")
+```
+
+```{r}
+plot(nn, rep="best")
+```
+
+```{r}
+nn$weights
+```
+
+```{r}
+compute(nn, data.test[1,])
+```
+
+```{r}
+pred = compute(nn, data.test)
+
+pred.class = rep(FALSE, nrow(data.test))
+pred.class[pred$net.result>0.5] = TRUE
+
+confusion = table(pred.class, data.test$Up)
+confusion
+```
+
+```{r}
+sum(diag(confusion)) / sum(confusion)
+```
+
+```{r}
+logit.res = glm(Up~., data=data.train, family=binomial(link=logit))
+summary(logit.res)
+```
+
+```{r}
+logit.pred.prob = predict(logit.res, data.test, type="response")
+logit.pred = rep(FALSE, nrow(data.test))
+logit.pred[logit.pred.prob>0.05] = TRUE
+confusion = table(logit.pred, data.test$Up)
+confusion
+```
+
+```{r}
+sum(diag(confusion)) / sum(confusion)
+```

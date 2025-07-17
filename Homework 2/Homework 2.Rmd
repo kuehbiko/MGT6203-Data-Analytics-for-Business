@@ -1,0 +1,133 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(stats)
+library(caret)
+library(dplyr)
+library(MASS)
+library(glmnet)
+```
+
+1\. Import that data into R. Run a linear regression of Price on all the available explanatory variables (i.e., Age, KM, HP, Metallic, Automatic, CC, Doors, Gears, Weight). Use the summary() function to show the regression results. (Note: R is case sensitive, so be careful with the variable names.)
+
+```{r}
+mydata = read.csv("UsedCars.csv")
+```
+
+```{r}
+model1 = lm(Price~Age+KM+HP+Metallic+Automatic+CC+Doors+Gears+Weight, data=mydata)
+summary(model1)
+```
+
+2.  Calculate the fitted values of the response variable, and calculate the residuals. Co-list the original y values, fitted y-hat values, and the residuals together for the first 10 observations. Check if the residuals equal y − y-hat.
+
+```{r}
+model1$fitted.values[1:10]
+```
+
+```{r}
+resid(model1)[1:10]
+```
+
+```{r}
+mydata$Price[1:10]
+```
+
+```{r}
+mydata$Price[1:10] - model1$fitted.values[1:10]
+```
+
+3\. Re-produce the t-statistics for all b. Co-list your calculated t-statistics along with the t-statistics generated from summary() of the regression results. They should be exactly the same.\
+
+```{r}
+summary(model1)$coefficients[,1] / summary(model1)$coefficients[,2]
+```
+
+4\. Determine the critical value (or cutoff) of the t-statistic for a 𝛽𝛽 estimate to be considered as significant at 95% confidence level. You need to first determine the degree of freedom of your model (Hint: you can simply retrieve the value of df.residual from the regression result.) Then you need to find the corresponding percentile of the t distribution (with that degree of freedom). (Hint: use qt() function to find a certain percentile of a t distribution.)
+
+```{r}
+qt(0.05,1254)
+```
+
+5.  Calculate the p-value for each 𝛽𝛽̂ 𝑗𝑗 using the defining formula (Hint: use pt() function for the cdf of t distribution.) Co-list your calculated p-values along with the p-values generated from summary() of the regression results. They should be exactly the same.
+
+Calculate the R-squared of the regression you have performed, using the defining formula 𝑹𝑹𝟐𝟐 = 𝑺𝑺𝑺𝑺𝑺𝑺 𝑺𝑺𝑺𝑺𝑺𝑺. Compare your calculated value with the R-squared value calculated by the routine. (Hint: you can retrieve r.squared from the summary() output.) Again, they should be the same.
+
+```{r}
+summary(model1)$r.squared
+```
+
+```{r}
+library(car)
+```
+
+```{r}
+vif(model1)
+```
+
+9\. Re-produce the VIF for the coefficient of Weight (which has the largest VIF value), following these two steps: i. Regress Weight on all the other independent variables, and obtain the R-squared ii. Calculate the VIF using the defining formula
+
+```{r}
+model2 = lm(Weight ~ Age+KM+HP+Metallic+Automatic+CC+Doors+Gears, data=mydata)
+summary(model2)
+```
+
+```{r}
+model3 = lm(Price ~ Age+KM+HP+Automatic+Gears+Weight, data=mydata)
+summary(model3)
+```
+
+```{r}
+summary(model1)$r.squared
+```
+
+```{r}
+summary(model1)$adj.r.squared
+```
+
+```{r}
+summary(model3)$r.squared
+```
+
+```{r}
+summary(model3)$adj.r.squared
+```
+
+---\
+
+```{r}
+mydata2 = read.csv("UsedCars2.csv", stringsAsFactors = TRUE)
+str(mydata2)
+```
+
+```{r}
+model4 = lm(Price~Age+KM+HP+Automatic+Gears+Weight+Color, data=mydata2)
+summary(model4)
+```
+
+```{r}
+contrasts(mydata2$Color, sparse = TRUE)
+```
+
+```{r}
+model5 = lm(Price~Age:KM+Age+KM+HP+Automatic+Gears+Weight, data=mydata2)
+summary(model5)
+```
+
+```{r}
+plot(mydata2$KM, mydata2$Price)
+```
+
+```{r}
+model6 = lm(Price ~ poly(KM, 4, raw=TRUE)+Automatic, data=mydata)
+summary(model6)
+```
+
+```{r}
+plot(mydata2$KM, mydata2$Price)
+km.grid <- seq(from=min(mydata2$KM), to=max(mydata2$KM), by=1000)
+preds <- predict(model6, newdata=list(KM=km.grid, Automatic=rep(mean(mydata2$Automatic),length(km.grid))))
+```

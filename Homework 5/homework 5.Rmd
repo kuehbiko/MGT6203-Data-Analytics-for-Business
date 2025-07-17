@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(mlogit)
+```
+
+```{r}
+mydata = read.csv("Commute_Mode.csv")
+str(mydata)
+```
+
+```{r}
+mydata2 = mlogit.data(mydata, shape="long", choice="choice", alt.var="mode", chid.var="id")
+head(mydata2)
+```
+
+```{r}
+ml.res = mlogit(choice~cost+time, mydata2)
+summary(ml.res)
+```
+
+```{r}
+head(fitted(ml.res, outcome=FALSE))
+```
+
+```{r}
+cost.avg = tapply(mydata2$cost, mydata2$mode, mean)
+cost.avg
+```
+
+```{r}
+time.avg = tapply(mydata2$time, mydata2$mode, mean)
+time.avg
+```
+
+```{r}
+xval = data.frame(cost=cost.avg, time=time.avg)
+xval
+```
+
+```{r}
+effects(ml.res, covariate="time", data=xval)
+```

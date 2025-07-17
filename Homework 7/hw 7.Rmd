@@ -1,0 +1,192 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tm)
+library(lsa)
+library(SnowballC)
+```
+
+```{r}
+mydata = read.csv("Ads.csv")
+str(mydata)
+```
+
+```{r}
+corp = Corpus(DataframeSource(mydata[,1:2]))
+label = mydata[,3]
+```
+
+```{r}
+corp = tm_map(corp, stripWhitespace)
+corp = tm_map(corp, removePunctuation)
+corp = tm_map(corp, removeNumbers)
+corp = tm_map(corp, removeWords, stopwords("english"))
+corp = tm_map(corp, stemDocument)
+```
+
+```{r}
+corp
+```
+
+```{r}
+tdm = TermDocumentMatrix(corp)
+tdm
+```
+
+```{r}
+tdm$dimnames$Terms[1:30]
+```
+
+```{r}
+tfidf = weightTfIdf(tdm)
+```
+
+```{r}
+tfidf$v[1]
+```
+
+```{r}
+lsa.tfidf = lsa(tfidf, dim=20)
+```
+
+```{r}
+str(lsa.tfidf$dk)
+```
+
+```{r}
+words.df = as.data.frame(as.matrix(lsa.tfidf$dk))
+```
+
+```{r}
+set.seed(1111)
+train.indx = sample(1:1000, 800)
+train.data = cbind(label=label[train.indx], words.df[train.indx,])
+test.data = cbind(label=label[-train.indx], words.df[-train.indx,])
+```
+
+```{r}
+logit.res = glm(label~., family=binomial(link=logit), data=train.data)
+summary(logit.res)
+```
+
+```{r}
+str(train.data)
+```
+
+```{r}
+pred = predict(logit.res, newdata=test.data, type="response")
+yhat = rep(1, nrow(test.data))
+yhat[pred<0.5] = 0
+confusion = table(yhat, test.data$label)
+confusion
+```
+
+```{r}
+sum(diag(confusion)) / sum(confusion)
+```
+
+```{r}
+library(tm)
+library(SnowballC)
+library(topicmodels)
+library(wordcloud)
+```
+
+```{r}
+mydata = read.csv("News.csv")
+str(mydata)
+```
+
+```{r}
+corp = Corpus(DataframeSource(mydata))
+```
+
+```{r}
+processedcorp = tm_map(corp, stripWhitespace)
+processedcorp = tm_map(processedcorp, removePunctuation)
+processedcorp = tm_map(processedcorp, removeNumbers)
+processedcorp = tm_map(processedcorp, removeWords, stopwords("english"))
+processedcorp = tm_map(processedcorp, stemDocument)
+```
+
+```{r}
+DTM = DocumentTermMatrix(processedcorp, control=list(bounds=list(global=c(3, Inf))))
+```
+
+```{r}
+dim(DTM)
+```
+
+```{r}
+nTerms(DTM)
+```
+
+```{r}
+nDocs(DTM)
+```
+
+```{r}
+DTM$dimnames$Terms[1:50]
+```
+
+```{r}
+row.indx = slam::row_sums(DTM) > 0
+DTM = DTM[row.indx,]
+mydata = mydata[row.indx,]
+dim(DTM)
+```
+
+```{r}
+set.seed(1000)
+tm = LDA(DTM, 20, method="Gibbs", control=list(iter=1000, verbose=50))
+```
+
+```{r}
+tm.res = posterior(tm)
+```
+
+```{r}
+beta = tm.res$terms
+dim(beta)
+```
+
+```{r}
+beta[,1:5]
+```
+
+```{r}
+rowSums(beta)
+```
+
+```{r}
+theta = tm.res$topics
+dim(theta)
+```
+
+```{r}
+theta[1:5,]
+```
+
+```{r}
+rowSums(theta)[1:10]
+```
+
+```{r}
+terms(tm, 10)
+```
+
+```{r}
+barplot(theta[1082,])
+```
+
+```{r}
+as.character(corp[1082]$content)
+```
+
+```{r}
+top.term.prob = sort(beta[4,], decreasing=TRUE)[1:50]
+wordcloud(names(top.term.prob), top.term.prob, random.order=FALSE)
+```

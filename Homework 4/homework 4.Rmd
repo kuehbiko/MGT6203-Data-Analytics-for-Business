@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+mydata = read.csv("Forum_Posts.csv")
+str(mydata)
+```
+
+```{r}
+poisson.res = glm(posts~., family=poisson, data=mydata)
+summary(poisson.res)
+```
+
+```{r}
+y = mydata$posts
+yhat = predict(poisson.res, type="response")
+sum((y-yhat)^2/yhat)/(nrow(mydata)-length(coef(poisson.res)))
+```
+
+```{r}
+library(MASS)
+```
+
+```{r}
+nb.res = glm.nb(posts~., data=mydata)
+summary(nb.res)
+```
+
+```{r}
+cbind(AIC(poisson.res), AIC(nb.res))
+cbind(BIC(poisson.res), BIC(nb.res))
+```
+
+```{r}
+xbar = colMeans(mydata)[2:5]
+xb.pos = crossprod(coef(poisson.res), c(1,xbar))
+xb.nb = crossprod(coef(nb.res), c(1,xbar))
+k = 0:20
+p1 = dpois(k, exp(xb.pos))
+p2 = dnbinom(k, size=nb.res$theta, mu=exp(xb.nb))
+plot(k, p2, pch=16, xlab="posts", ylab="prob")
+points(k, p1)
+legend("topright", c("poisson", "negative binomial"), pch=c(1,16))
+```
+
+```{r}
+library(survival)
+```
+
+```{r}
+mydata = read.csv("Bank_Attrition.csv")
+str(mydata)
+```
+
+```{r}
+surv.res = survreg(Surv(ChurnTime, 1-Censored)~.-CustomerID, data=mydata, dist="weibull")
+summary(surv.res)
+```
+
+```{r}
+a = 1/surv.res$scale
+a
+```
+
+```{r}
+beta = -coef(surv.res)*a
+beta
+```
+
+```{r}
+xbar = colMeans(mydata[,2:10])
+xbeta = crossprod(c(1,xbar),beta)
+curve(exp(c(xbeta))*a*x^(a-1),xlim=c(0,20), xlab="time", ylab="hazard")
+```
+
+```{r}
+curve(dweibull(x, shape=a, scale=exp(-xbeta/a)), xlab="ChurnTime", ylab="density", xlim=c(0,20), ylim=c(0,0.12))
+hist(mydata$ChurnTime[mydata$Censored==0], breaks=50, freq=FALSE, add=TRUE, col=NULL)
+```

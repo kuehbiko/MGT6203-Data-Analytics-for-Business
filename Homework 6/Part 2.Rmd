@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(recommenderlab)
+```
+
+```{r}
+data("MovieLense")
+```
+
+```{r}
+getRatingMatrix(MovieLense)
+```
+
+```{r}
+myrating = matrix(NA, 1, 1664)
+```
+
+```{r}
+myrating[c(71, 94)] = c(5, 4)
+```
+
+```{r}
+myrating[c(1, 11, 12, 22, 23, 29, 50, 56, 64, 71, 82, 88, 94, 96, 98)] <- c(1, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3)
+```
+
+```{r}
+myrating = as(myrating, "realRatingMatrix")
+```
+
+```{r}
+rec.ub = Recommender(MovieLense, "UBCF")
+pred.ub = predict(rec.ub, myrating, n=10, type="topNList")
+as(pred.ub, "list")
+```
